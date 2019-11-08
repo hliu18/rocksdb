@@ -82,6 +82,11 @@ class Iterator : public Cleanable {
   // REQUIRES: Valid()
   virtual Slice value() const = 0;
 
+  // Return the timestamp of the current entry.  The underlying storage for
+  // the returned slice is valid only until the next modification of
+  // the iterator. If there is no timestamp
+  virtual Slice timestamp() const = 0;
+
   // If an error has occurred, return it.  Else return an ok status.
   // If non-blocking IO is requested and this operation cannot be
   // satisfied without doing some IO, then this returns Status::Incomplete().
