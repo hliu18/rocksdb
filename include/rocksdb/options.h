@@ -1294,6 +1294,8 @@ struct ReadOptions {
   // and the API is subject to change.
   const Slice* timestamp;
 
+  bool include_older_versions;
+
   ReadOptions();
   ReadOptions(bool cksum, bool cache);
 };

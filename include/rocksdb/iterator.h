@@ -85,7 +85,8 @@ class Iterator : public Cleanable {
   // Return the timestamp of the current entry.  The underlying storage for
   // the returned slice is valid only until the next modification of
   // the iterator. If there is no timestamp
-  virtual Slice timestamp() const = 0;
+  // Issue: timestamp() is already used by TtlIterator.
+  virtual Slice time() const = 0;
 
   // If an error has occurred, return it.  Else return an ok status.
   // If non-blocking IO is requested and this operation cannot be

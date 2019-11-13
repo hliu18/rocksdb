@@ -163,6 +163,10 @@ class DBIter final : public Iterator {
       return iter_.value();
     }
   }
+  Slice time() const override {
+    assert(valid_);
+    // ...
+  }
   Status status() const override {
     if (status_.ok()) {
       return iter_.status();
