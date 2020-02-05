@@ -256,6 +256,20 @@ bool GetContext::SaveValue(const ParsedInternalKey& parsed_key,
             push_operand(value, value_pinner);
           }
         }
+        if (state_ == kFound) {
+            size_t ts_sz = ucmp_->timestamp_size();
+            if (ts_sz > 0) {
+              Slice ts = ExtractTimestamp(parsed_key.user_key);
+              if (ts_sz > sizeof(ts_space_)) {
+                ts_alloc_ = new char[ts_sz];
+                ts_slice = Slice(ts_alloc_, ts_sz);
+                memcpy(ts_alloc_, ts.data(), ts.size());
+              } else {
+                memcpy(ts_space_, ts.data(), ts.size());
+                ts_slice = Slice(ts_space_, ts_sz);
+              }
+            }
+        }
         if (is_blob_index_ != nullptr) {
           *is_blob_index_ = (type == kTypeBlobIndex);
         }

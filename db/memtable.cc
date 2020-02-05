@@ -600,6 +600,9 @@ struct Saver {
   bool* merge_in_progress;
   std::string* value;
   SequenceNumber seq;
+  Slice* ts_slice;
+  char ts_space_[20];
+  char* ts_alloc_;
   const MergeOperator* merge_operator;
   // the merge operations encountered;
   MergeContext* merge_context;
@@ -643,9 +646,9 @@ static bool SaveValue(void* arg, const char* entry) {
   uint32_t key_length;
   const char* key_ptr = GetVarint32Ptr(entry, entry + 5, &key_length);
   Slice user_key_slice = Slice(key_ptr, key_length - 8);
-  if (s->mem->GetInternalKeyComparator()
-          .user_comparator()
-          ->CompareWithoutTimestamp(user_key_slice, s->key->user_key()) == 0) {
+  Comparator* user_comparator = s->mem->GetInternalKeyComparator().user_comparator();
+  size_t ts_sz = user_comparator->timestamp_size();
+  if (user_comparator->CompareWithoutTimestamp(user_key_slice, s->key->user_key()) == 0) {
     // Correct user key
     const uint64_t tag = DecodeFixed64(key_ptr + key_length - 8);
     ValueType type;
@@ -712,6 +715,18 @@ static bool SaveValue(void* arg, const char* entry) {
         *(s->found_final_value) = true;
         if (s->is_blob_index != nullptr) {
           *(s->is_blob_index) = (type == kTypeBlobIndex);
+        }
+
+        if (ts_sz > 0) {
+          Slice ts = ExtractTimestamp(user_key_slice);
+          if (ts_sz > sizeof(s->ts_space_)) {
+            s->ts_alloc_ = new char[ts_sz];
+            s->ts_slice = Slice(s->ts_alloc_, ts_sz);
+            memcpy(s->ts_alloc_, ts.data(), ts.size());
+          } else {
+            memcpy(s->ts_space_, ts.data(), ts.size());
+            s->ts_slice = Slice(s->ts_space_, ts_sz);
+          }
         }
         return false;
       }
